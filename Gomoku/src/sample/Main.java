@@ -12,6 +12,13 @@ import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 
+/*
+* Gomoku is a game played in the go board and go pieces, also named "Five in a Row"
+* The rule is that two players alternatively place black or white pieces.
+* The winner is the one who get an unbroken row of five stones horizontally, vertically, or diagonally.
+* More description about the game can be found in https://en.wikipedia.org/wiki/Gomoku
+* */
+
 public class Main extends Application {
 
     private boolean gameOver = false;
@@ -42,8 +49,7 @@ public class Main extends Application {
     }
 
     public boolean hasWon(char tkn, int posX, int posY) {
-        // horizontal check
-        // counter is used for counting the
+        // counter is used for counting the number of pieces in a line
         if(nFilled<9) return false;
         int counter = 1;
         int i;
@@ -138,6 +144,7 @@ public class Main extends Application {
     public class Cell extends Pane {
         private int indX;
         private int indY;
+        private boolean filled = false;
         private char token = ' ';   // one of blank, X, or O
 
         public Cell(int i, int j) {
@@ -152,45 +159,68 @@ public class Main extends Application {
             return token;
         }
 
-        public void drawX() {
+        public void setFilled() { filled = true; }
+
+        public boolean drawX() {
+            if(filled == true){
+
+                return false;
+            }
+
             double w = getWidth(), h = getHeight();
             Line line1 = new Line(2.0f, 2.0f, w - 2.0f, h - 2.0f);
             Line line2 = new Line(2.0f, h - 2.0f, w - 2.0f, 2.0f);
             getChildren().addAll(line1, line2);
+            return true;
         }
 
-        public void drawO() {
+        public boolean drawO() {
+            if(filled == true){
+                return false;
+            }
+
             double w = getWidth(), h = getHeight();
             Ellipse ellipse = new Ellipse(w/2, h/2, w/2 - 2.0f, h/2 - 2.0f);
             ellipse.setStroke(Color.BLACK);
             ellipse.setFill(Color.WHITE);
             getChildren().add(ellipse);
+            return true;
         }
 
-        public void setToken(char c) {
+        public boolean setToken(char c) {
+            boolean success;
             if (c == 'X')
-                drawX();
+                success = drawX();
             else
-                drawO();
-            token = c;
-            nFilled ++;
+                success = drawO();
+
+            if(success == true) {
+                setFilled();
+                token = c;
+                nFilled++;
+                return true;
+            }
+            return false;
         }
 
         private void handleMouseClick(int i, int j) {
             String s = "";
+            boolean success;
             if (!gameOver) {
-                setToken(whoseTurn);
-                if (hasWon(whoseTurn,i,j)) {
-                    gameOver = true;
-                    s = whoseTurn + " won! The game is over";
-                }
-                else if (isFull()) {
-                    gameOver = true;
-                    s = "Draw! The game is over";
-                }
-                else {
-                    whoseTurn = (whoseTurn == 'X') ? 'O' : 'X';
-                    s = whoseTurn + "'s turn";
+                success = setToken(whoseTurn);
+                if (success == false) {
+                    s = whoseTurn + " cannot placed in the same slot";
+                } else {
+                    if (hasWon(whoseTurn, i, j)) {
+                        gameOver = true;
+                        s = whoseTurn + " won! The game is over";
+                    } else if (isFull()) {
+                        gameOver = true;
+                        s = "Draw! The game is over";
+                    } else {
+                        whoseTurn = (whoseTurn == 'X') ? 'O' : 'X';
+                        s = whoseTurn + "'s turn";
+                    }
                 }
                 statusLabel.setText(s);
             }
